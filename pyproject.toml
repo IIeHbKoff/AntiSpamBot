@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "antispambot"
-version = "0.1.0"
+version = "0.2.0"
 description = ""
 authors = ["AlexBelyan <belyan.alex93@gmail.com>"]
 license = "MIT"
@@ -10,6 +10,9 @@ readme = "README.md"
 python = "^3.9"
 aiogram = "^3.3.0"
 
+
+[tool.poetry.group.dev.dependencies]
+nuitka = "^2.0.1"
 
 [build-system]
 requires = ["poetry-core"]
