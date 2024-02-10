@@ -18,6 +18,13 @@ async def check_bad_world(message):
         return False
 
 
-async def kick_user_from_chat(*, bot: Bot, chat_id: int, user_id: int) -> None:
+async def kick_user_from_chat(
+        *,
+        bot: Bot,
+        chat_id: int,
+        user_id: int,
+        msg_id: int,
+) -> None:
+    await bot.delete_message(chat_id=chat_id, message_id=msg_id)
     await bot.ban_chat_member(chat_id=chat_id, user_id=user_id)
     # await bot.unban_chat_member(chat_id=chat_id, user_id=user_id)
