@@ -27,4 +27,4 @@ async def kick_user_from_chat(
 ) -> None:
     await bot.delete_message(chat_id=chat_id, message_id=msg_id)
     await bot.ban_chat_member(chat_id=chat_id, user_id=user_id)
-    # await bot.unban_chat_member(chat_id=chat_id, user_id=user_id)
+    await bot.unban_chat_member(chat_id=chat_id, user_id=user_id)
