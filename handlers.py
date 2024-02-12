@@ -26,12 +26,12 @@ async def start_handler(msg: Message):
 async def spam_handler(msg: Message):
     logger.warning(f"SPAM - {msg.reply_to_message.text}")
     await msg.delete()
-    await kick_user_from_chat(
-        bot=msg.bot,
-        user_id=msg.reply_to_message.from_user.id,
-        chat_id=msg.chat.id,
-        msg_id=msg.reply_to_message.message_id,
-    )
+    # await kick_user_from_chat(
+    #     bot=msg.bot,
+    #     user_id=msg.reply_to_message.from_user.id,
+    #     chat_id=msg.chat.id,
+    #     msg_id=msg.reply_to_message.message_id,
+    # )
     await msg.answer("Сообщение удалено")
 
 

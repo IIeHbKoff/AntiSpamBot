@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "antispambot"
-version = "0.3.0"
+version = "0.3.1"
 description = ""
 authors = ["AlexBelyan <belyan.alex93@gmail.com>"]
 license = "MIT"
