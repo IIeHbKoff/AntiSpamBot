@@ -1,22 +1,33 @@
 import asyncio
 import logging
-from logging.handlers import RotatingFileHandler
-
-import config
 
 from aiogram import Bot, Dispatcher
-from aiogram.enums.parse_mode import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from config import Config
+from logging.handlers import RotatingFileHandler
 
 from database import Database
 from handlers import router
 
-bot = Bot(token=config.BOT_TOKEN, parse_mode=ParseMode.HTML)
-database = Database()
+config = Config()
+bot = Bot(token=config.bot_token)
+database = Database(config=config)
 scheduler = AsyncIOScheduler()
+storage = MemoryStorage()
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - [%(levelname)s] -  %(name)s - %(message)s",
+    handlers=[
+        RotatingFileHandler(
+            filename=config.logger_filename,
+            maxBytes=config.logger_filesize,
+            backupCount=config.logger_files_count,
+        ),
+    ]
+)
 dispatcher = Dispatcher(
-    storage=MemoryStorage(),
+    storage=storage,
     database=database,
     scheduler=scheduler,
 )
@@ -24,17 +35,6 @@ dispatcher = Dispatcher(
 
 @dispatcher.startup()
 async def on_startup():
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - [%(levelname)s] -  %(name)s - %(message)s",
-        handlers=[
-            RotatingFileHandler(
-                filename="anti_spam_bot.log",
-                maxBytes=20000000,
-                backupCount=5,
-            ),
-        ]
-    )
     dispatcher.include_router(router)
     scheduler.start()
     await database.connect()

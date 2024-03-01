@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+import logging
 
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
@@ -6,8 +6,8 @@ from aiogram.types import Message, ChatMemberUpdated
 from aiogram.filters import (
     IS_MEMBER, IS_NOT_MEMBER, ChatMemberUpdatedFilter, Command
 )
-from aiogram.loggers import logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from datetime import datetime, timedelta
 
 from database import Database
 from fsm_contexts import CapchaState
@@ -23,9 +23,18 @@ async def start_handler(msg: Message):
 
 
 @router.message(Command("spam"))
-async def spam_handler(msg: Message):
-    logger.warning(f"SPAM - {msg.reply_to_message.text}")
+async def spam_handler(msg: Message, database: Database):
+    try:
+        logger.warning(
+            f"SPAM | "
+            f"user who replied - {msg.from_user.id} | "
+            f"user who sent message - {msg.reply_to_message.from_user.id} | "
+            f"message - {msg.reply_to_message.text}")
+    except Exception as e:
+        logger.error(e)
     await msg.delete()
+    await msg.reply_to_message.delete()
+    await database.add_spam_message(message=msg.reply_to_message.text)
     # await kick_user_from_chat(
     #     bot=msg.bot,
     #     user_id=msg.reply_to_message.from_user.id,
