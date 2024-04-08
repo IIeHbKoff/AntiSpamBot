@@ -2,11 +2,7 @@ from aiogram.client.bot import Bot
 
 
 async def check_bad_world(message):
-    bad_world_list = [
-        'крипта', "криптовалют", "forex",
-        "CLICK ON THE LINK TO JOIN",
-        "для тестирования сети",
-    ]
+    bad_world_list = []
     bad_worlds_counter = 0
     for bad_world in bad_world_list:
         if bad_world in message:

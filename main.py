@@ -17,7 +17,7 @@ scheduler = AsyncIOScheduler()
 storage = MemoryStorage()
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - [%(levelname)s] -  %(name)s - %(message)s",
+    format="%(asctime)s - %(name)s - [%(levelname)s] - %(message)s",
     handlers=[
         RotatingFileHandler(
             filename=config.logger_filename,
