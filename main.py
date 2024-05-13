@@ -30,6 +30,7 @@ dispatcher = Dispatcher(
     storage=storage,
     database=database,
     scheduler=scheduler,
+    config=config,
 )
 
 

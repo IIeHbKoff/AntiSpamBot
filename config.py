@@ -10,7 +10,7 @@ class Config:
         self._config.read('config.ini')
 
     @property
-    def bot_token(self):
+    def bot_token(self) -> str:
         return self._config.get(
             "bot",
             "token",
@@ -18,7 +18,7 @@ class Config:
         )
 
     @property
-    def db_engine(self):
+    def db_engine(self) -> str:
         return self._config.get(
             "database",
             "engine",
@@ -26,7 +26,7 @@ class Config:
         )
 
     @property
-    def db_host(self):
+    def db_host(self) -> str:
         return self._config.get(
             "database",
             "host",
@@ -34,15 +34,15 @@ class Config:
         )
 
     @property
-    def db_port(self):
-        return self._config.get(
+    def db_port(self) -> int:
+        return self._config.getint(
             "database",
             "port",
             fallback=os.getenv("DB_PORT"),
         )
 
     @property
-    def db_name(self):
+    def db_name(self) -> str:
         return self._config.get(
             "database",
             "db_name",
@@ -50,7 +50,7 @@ class Config:
         )
 
     @property
-    def db_username(self):
+    def db_username(self) -> str:
         return self._config.get(
             "database",
             "username",
@@ -58,7 +58,7 @@ class Config:
         )
 
     @property
-    def db_password(self):
+    def db_password(self) -> str:
         return self._config.get(
             "database",
             "password",
@@ -66,7 +66,7 @@ class Config:
         )
 
     @property
-    def cache_engine(self):
+    def cache_engine(self) -> str:
         return self._config.get(
             "cache",
             "engine",
@@ -74,7 +74,7 @@ class Config:
         )
 
     @property
-    def cache_host(self):
+    def cache_host(self) -> str:
         return self._config.get(
             "cache",
             "host",
@@ -82,15 +82,15 @@ class Config:
         )
 
     @property
-    def cache_port(self):
-        return self._config.get(
+    def cache_port(self) -> int:
+        return self._config.getint(
             "cache",
             "port",
             fallback=os.getenv("CACHE_PORT"),
         )
 
     @property
-    def cache_db_name(self):
+    def cache_db_name(self) -> str:
         return self._config.get(
             "cache",
             "db_name",
@@ -98,7 +98,7 @@ class Config:
         )
 
     @property
-    def cache_username(self):
+    def cache_username(self) -> str:
         return self._config.get(
             "cache",
             "username",
@@ -106,7 +106,7 @@ class Config:
         )
 
     @property
-    def cache_password(self):
+    def cache_password(self) -> str:
         return self._config.get(
             "cache",
             "password",
@@ -114,7 +114,7 @@ class Config:
         )
 
     @property
-    def logger_driver(self):
+    def logger_driver(self) -> str:
         return self._config.get(
             "logger",
             "driver",
@@ -122,7 +122,7 @@ class Config:
         )
 
     @property
-    def logger_filename(self):
+    def logger_filename(self) -> str:
         return self._config.get(
             "logger",
             "filename",
@@ -130,7 +130,7 @@ class Config:
         )
 
     @property
-    def logger_filesize(self):
+    def logger_filesize(self) -> int:
         data = self._config.get(
             "logger",
             "filesize",
@@ -153,9 +153,25 @@ class Config:
             return value
 
     @property
-    def logger_files_count(self):
+    def logger_files_count(self) -> int:
         return self._config.getint(
             "logger",
             "files_count",
             fallback=5,
+        )
+
+    @property
+    def threshold(self) -> float:
+        return self._config.getfloat(
+            "spam_filter",
+            "threshold",
+            fallback=0.7,
+        )
+
+    @property
+    def allow_to_ban(self) -> bool:
+        return self._config.getboolean(
+            "spam_filter",
+            "allow_to_ban",
+            fallback=False,
         )

@@ -1,17 +1,22 @@
 from aiogram.client.bot import Bot
+from difflib import SequenceMatcher
+
+from config import Config
+from database import Database
 
 
-async def check_bad_world(message):
-    bad_world_list = []
-    bad_worlds_counter = 0
-    for bad_world in bad_world_list:
-        if bad_world in message:
-            bad_worlds_counter += 1
-
-    if bad_worlds_counter > 0:
-        return True
-    else:
-        return False
+async def check_spam(
+        *,
+        msg_text: str,
+        config: Config,
+        database: Database,
+) -> bool:
+    messages = await database.get_spam_msgs()
+    for message in messages:
+        similarity_ratio = SequenceMatcher(None, msg_text, message).ratio()
+        if similarity_ratio >= config.threshold:
+            return True
+    return False
 
 
 async def kick_user_from_chat(

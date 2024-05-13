@@ -9,9 +9,10 @@ from aiogram.filters import (
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime, timedelta
 
+from config import Config
 from database import Database
 from fsm_contexts import CapchaState
-from utils import check_bad_world, kick_user_from_chat
+from utils import kick_user_from_chat, check_spam
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ async def start_handler(msg: Message):
 
 
 @router.message(Command("spam"))
-async def spam_handler(msg: Message, database: Database):
+async def spam_handler(msg: Message, database: Database, config: Config):
     try:
         logger.warning(
             f"SPAM | "
@@ -35,16 +36,20 @@ async def spam_handler(msg: Message, database: Database):
     await msg.delete()
     await msg.reply_to_message.delete()
     await database.add_spam_message(message=msg.reply_to_message.text)
-    # await kick_user_from_chat(
-    #     bot=msg.bot,
-    #     user_id=msg.reply_to_message.from_user.id,
-    #     chat_id=msg.chat.id,
-    #     msg_id=msg.reply_to_message.message_id,
-    # )
-    await msg.answer("Сообщение удалено")
+    if config.allow_to_ban:
+        await kick_user_from_chat(
+            bot=msg.bot,
+            user_id=msg.reply_to_message.from_user.id,
+            chat_id=msg.chat.id,
+            msg_id=msg.reply_to_message.message_id,
+        )
+    await msg.answer(
+        text="Сообщение удалено",
+        disable_notification=True
+    )
 
 
-@router.chat_member(ChatMemberUpdatedFilter(IS_NOT_MEMBER >> IS_MEMBER))
+# @router.chat_member(ChatMemberUpdatedFilter(IS_NOT_MEMBER >> IS_MEMBER))
 async def new_member(
         event: ChatMemberUpdated,
         state: FSMContext,
@@ -108,9 +113,25 @@ async def new_user_verification(
 async def message_handler(
         msg: Message,
         database: Database,
+        config: Config,
 ):
     if msg.text is not None:
-        if await check_bad_world(msg.text):
-            logger.warning(f"BAD WORDS - {msg.text}")
+        result = await check_spam(
+            msg_text=msg.text,
+            database=database,
+            config=config,
+        )
+        if result:
+            logger.warning(f"SPAM - {msg.text}")
             await msg.delete()
-            await msg.answer("Сообщение удалено")
+            await msg.answer(
+                text="Сообщение удалено",
+                disable_notification=True
+            )
+            if config.allow_to_ban:
+                await kick_user_from_chat(
+                    bot=msg.bot,
+                    chat_id=msg.chat.id,
+                    user_id=msg.from_user.id,
+                    msg_id=msg.message_id,
+                )

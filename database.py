@@ -90,6 +90,13 @@ class Database:
         result = await self.read(query=query, vargs=(message,))
         return bool(result[0][0])
 
+    async def get_spam_msgs(self) -> list[str]:
+        query = (
+            'SELECT distinct msg_text from spam_messages;'
+        )
+        result = await self.read(query=query)
+        return [res[0] for res in result]
+
     async def update_users_msgs_count(self, *, user_tg_id: int) -> None:
         query = (
             'INSERT INTO users (tg_id, msgs_count) VALUES (?, 1) '
