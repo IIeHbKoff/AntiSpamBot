@@ -175,3 +175,11 @@ class Config:
             "allow_to_ban",
             fallback=False,
         )
+
+    @property
+    def answer_to_deleted_messages(self) -> bool:
+        return self._config.getboolean(
+            "spam_filter",
+            "answer_to_deleted_messages",
+            fallback=True,
+        )

@@ -4,17 +4,20 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from config import Config
 from logging.handlers import RotatingFileHandler
 
+from config import Config
 from database import Database
 from handlers import router
+from utils import Utils
 
 config = Config()
 bot = Bot(token=config.bot_token)
 database = Database(config=config)
 scheduler = AsyncIOScheduler()
 storage = MemoryStorage()
+utils = Utils()
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - [%(levelname)s] - %(message)s",
@@ -26,11 +29,13 @@ logging.basicConfig(
         ),
     ]
 )
+
 dispatcher = Dispatcher(
     storage=storage,
     database=database,
     scheduler=scheduler,
     config=config,
+    utils=utils,
 )
 
 

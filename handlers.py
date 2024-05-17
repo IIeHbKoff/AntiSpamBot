@@ -4,7 +4,8 @@ from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ChatMemberUpdated
 from aiogram.filters import (
-    IS_MEMBER, IS_NOT_MEMBER, ChatMemberUpdatedFilter, Command
+    # IS_MEMBER, IS_NOT_MEMBER, ChatMemberUpdatedFilter,
+    Command
 )
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime, timedelta
@@ -12,7 +13,7 @@ from datetime import datetime, timedelta
 from config import Config
 from database import Database
 from fsm_contexts import CapchaState
-from utils import kick_user_from_chat, check_spam
+from utils import Utils
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -25,28 +26,30 @@ async def start_handler(msg: Message):
 
 @router.message(Command("spam"))
 async def spam_handler(msg: Message, database: Database, config: Config):
-    try:
-        logger.warning(
-            f"SPAM | "
-            f"user who replied - {msg.from_user.id} | "
-            f"user who sent message - {msg.reply_to_message.from_user.id} | "
-            f"message - {msg.reply_to_message.text}")
-    except Exception as e:
-        logger.error(e)
-    await msg.delete()
-    await msg.reply_to_message.delete()
+    # logger.warning(
+    #     f"SPAM | "
+    #     f"user who replied - {msg.from_user.id} | "
+    #     f"user who sent message - {msg.reply_to_message.from_user.id} | "
+    #     f"message - {msg.reply_to_message.text}"
+    # )
     await database.add_spam_message(message=msg.reply_to_message.text)
+    await msg.reply_to_message.delete()
+
+    await msg.delete()
     if config.allow_to_ban:
-        await kick_user_from_chat(
-            bot=msg.bot,
-            user_id=msg.reply_to_message.from_user.id,
+        await msg.bot.ban_chat_member(
             chat_id=msg.chat.id,
-            msg_id=msg.reply_to_message.message_id,
+            user_id=msg.reply_to_message.from_user.id
         )
-    await msg.answer(
-        text="Сообщение удалено",
-        disable_notification=True
-    )
+        await msg.bot.unban_chat_member(
+            chat_id=msg.chat.id,
+            user_id=msg.reply_to_message.from_user.id
+        )
+    if config.answer_to_deleted_messages:
+        await msg.answer(
+            text="Сообщение удалено",
+            disable_notification=True
+        )
 
 
 # @router.chat_member(ChatMemberUpdatedFilter(IS_NOT_MEMBER >> IS_MEMBER))
@@ -54,6 +57,7 @@ async def new_member(
         event: ChatMemberUpdated,
         state: FSMContext,
         scheduler: AsyncIOScheduler,
+        utils: Utils,
 ):
     logger.info(f"NEW MEMBER - {event.new_chat_member.user.model_dump()}")
     msg = await event.answer(
@@ -63,7 +67,7 @@ async def new_member(
         f"2+2=?"
     )
     schedule_task_id = scheduler.add_job(
-        kick_user_from_chat,
+        utils.kick_user_from_chat,
         trigger='date',
         run_date=datetime.now() + timedelta(seconds=60),
         kwargs={
@@ -88,6 +92,7 @@ async def new_user_verification(
         msg: Message,
         state: FSMContext,
         scheduler: AsyncIOScheduler,
+        utils: Utils,
 ):
     data = await state.get_data()
     if msg.text.isdigit() and int(msg.text) == data["right_answer"]:
@@ -100,7 +105,7 @@ async def new_user_verification(
             text=f"{msg.from_user.first_name}, добро пожаловать в чат",
         )
     else:
-        await kick_user_from_chat(
+        await utils.kick_user_from_chat(
             bot=msg.bot,
             chat_id=msg.chat.id,
             user_id=msg.from_user.id,
@@ -114,24 +119,28 @@ async def message_handler(
         msg: Message,
         database: Database,
         config: Config,
+        utils: Utils,
 ):
     if msg.text is not None:
-        result = await check_spam(
+        result = await utils.check_spam(
             msg_text=msg.text,
             database=database,
             config=config,
         )
         if result:
-            logger.warning(f"SPAM - {msg.text}")
+            # logger.warning(f"SPAM - {msg.text}")
             await msg.delete()
-            await msg.answer(
-                text="Сообщение удалено",
-                disable_notification=True
-            )
+            if config.answer_to_deleted_messages:
+                await msg.answer(
+                    text="Сообщение удалено",
+                    disable_notification=True
+                )
             if config.allow_to_ban:
-                await kick_user_from_chat(
-                    bot=msg.bot,
+                await msg.bot.ban_chat_member(
                     chat_id=msg.chat.id,
-                    user_id=msg.from_user.id,
-                    msg_id=msg.message_id,
+                    user_id=msg.from_user.id
+                )
+                await msg.bot.unban_chat_member(
+                    chat_id=msg.chat.id,
+                    user_id=msg.from_user.id
                 )
